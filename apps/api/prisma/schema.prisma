@@ -1,0 +1,696 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ───────────────────────────────────────────────────────────────────
+
+enum Role {
+  ADMIN
+  MANAGER
+  RECEPTION
+  TRAINER
+  DIRECTOR
+}
+
+enum MembershipStatus {
+  ACTIVE
+  EXPIRED
+  FROZEN
+  CANCELLED
+}
+
+enum VisitStatus {
+  ACTIVE
+  COMPLETED
+  OVERSTAY
+}
+
+enum DealStatus {
+  OPEN
+  WON
+  LOST
+  ARCHIVED
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  ONLINE
+  TRANSFER
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  REFUNDED
+  CANCELLED
+}
+
+enum AccessEventType {
+  ENTRY
+  EXIT
+  DENIED
+}
+
+enum LoyaltyTransactionType {
+  EARN
+  SPEND
+  EXPIRE
+  ADJUST
+}
+
+enum CallDirection {
+  IN
+  OUT
+}
+
+// ─── Staff ───────────────────────────────────────────────────────────────────
+
+model Staff {
+  id           Int      @id @default(autoincrement())
+  role         Role     @default(RECEPTION)
+  firstName    String
+  lastName     String
+  middleName   String?
+  email        String   @unique
+  phone        String?
+  passwordHash String
+  avatar       String?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  assignedDeals    Deal[]             @relation("DealAssignee")
+  createdDeals     Deal[]             @relation("DealCreator")
+  dealActivities   DealActivity[]
+  assignedTasks    DealTask[]         @relation("TaskAssignee")
+  createdTasks     DealTask[]         @relation("TaskCreator")
+  dealComments     DealComment[]
+  soldMemberships  ClientMembership[] @relation("Seller")
+  checkIns         ClientVisit[]      @relation("CheckInBy")
+  phoneCalls       PhoneCall[]
+  trainedClasses   Class[]
+
+  @@index([email])
+  @@index([role])
+  @@map("staff")
+}
+
+// ─── Clients ─────────────────────────────────────────────────────────────────
+
+model Client {
+  id               Int       @id @default(autoincrement())
+  externalId       String?   @unique
+
+  firstName        String
+  lastName         String
+  middleName       String?
+
+  email            String?
+  phone            String
+  phones           Json?
+
+  telegram         String?
+  instagram        String?
+  vk               String?
+
+  birthDate        DateTime?
+  gender           String?
+  address          String?
+
+  photoUrl         String?
+  photos           Json?
+
+  heightCm         Float?
+  weightKg         Float?
+
+  balance          Decimal   @default(0) @db.Decimal(10, 2)
+
+  salesChannel     String?
+  referralCode     String?   @unique
+  referredById     Int?
+  referredBy       Client?   @relation("Referrals", fields: [referredById], references: [id])
+  referrals        Client[]  @relation("Referrals")
+
+  tags             Json?
+  notes            String?
+  passportData     Json?
+
+  isActive         Boolean   @default(true)
+  registrationDate DateTime  @default(now())
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  memberships        ClientMembership[]
+  visits             ClientVisit[]
+  rfidKeys           RfidKey[]
+  loyaltyAccount     ClientLoyalty?
+  loyaltyTransactions LoyaltyTransaction[]
+  deals              Deal[]
+  payments           Payment[]
+  classRegistrations ClassRegistration[]
+  clientNotes        ClientNote[]
+  phoneCalls         PhoneCall[]
+
+  @@index([phone])
+  @@index([isActive])
+  @@index([email])
+  @@map("clients")
+}
+
+model ClientNote {
+  id        Int      @id @default(autoincrement())
+  clientId  Int
+  client    Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  staffId   Int?
+  text      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([clientId])
+  @@map("client_notes")
+}
+
+// ─── Memberships ─────────────────────────────────────────────────────────────
+
+model MembershipType {
+  id          Int        @id @default(autoincrement())
+  name        String
+  code        String     @unique
+  description String?
+  color       String?
+  isActive    Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  memberships Membership[]
+
+  @@map("membership_types")
+}
+
+model Membership {
+  id               Int             @id @default(autoincrement())
+  membershipTypeId Int
+  membershipType   MembershipType  @relation(fields: [membershipTypeId], references: [id])
+
+  name              String
+  description       String?
+  price             Decimal        @db.Decimal(10, 2)
+
+  visitCount        Int?
+  daysValid         Int?
+
+  freezeDaysAllowed Int            @default(0)
+  guestVisits       Int            @default(0)
+
+  isActive          Boolean        @default(true)
+  sortOrder         Int            @default(0)
+  externalId        String?
+
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  clientMemberships ClientMembership[]
+
+  @@map("memberships")
+}
+
+model ClientMembership {
+  id               Int              @id @default(autoincrement())
+  clientId         Int
+  client           Client           @relation(fields: [clientId], references: [id])
+  membershipId     Int
+  membership       Membership       @relation(fields: [membershipId], references: [id])
+
+  status           MembershipStatus @default(ACTIVE)
+
+  purchaseDate     DateTime         @default(now())
+  activationDate   DateTime?
+  expirationDate   DateTime?
+
+  remainingVisits  Int?
+  usedVisits       Int              @default(0)
+
+  frozenAt         DateTime?
+  unfrozenAt       DateTime?
+  frozenDaysUsed   Int              @default(0)
+
+  sellerId         Int?
+  seller           Staff?           @relation("Seller", fields: [sellerId], references: [id])
+
+  paymentId        Int?             @unique
+  payment          Payment?         @relation(fields: [paymentId], references: [id])
+
+  externalId       String?
+
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  @@index([clientId])
+  @@index([status])
+  @@map("client_memberships")
+}
+
+// ─── Visits ──────────────────────────────────────────────────────────────────
+
+model ClientVisit {
+  id            Int         @id @default(autoincrement())
+  clientId      Int
+  client        Client      @relation(fields: [clientId], references: [id])
+
+  checkInTime   DateTime    @default(now())
+  checkOutTime  DateTime?
+
+  status        VisitStatus @default(ACTIVE)
+
+  membershipId  Int?
+
+  checkedInById Int?
+  checkedInBy   Staff?      @relation("CheckInBy", fields: [checkedInById], references: [id])
+
+  notes         String?
+  overstayMins  Int?
+
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([clientId])
+  @@index([checkInTime])
+  @@index([status])
+  @@map("client_visits")
+}
+
+// ─── RFID ─────────────────────────────────────────────────────────────────────
+
+model RfidKey {
+  id        Int      @id @default(autoincrement())
+  clientId  Int
+  client    Client   @relation(fields: [clientId], references: [id])
+
+  code      String   @unique
+  type      String   // card | bracelet | keyfob
+  label     String?
+
+  isActive  Boolean  @default(true)
+  issuedAt  DateTime @default(now())
+  revokedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  accessEvents AccessEvent[]
+
+  @@index([clientId])
+  @@index([code])
+  @@map("rfid_keys")
+}
+
+model AccessRule {
+  id         Int      @id @default(autoincrement())
+  name       String
+  zone       String
+  validFrom  DateTime?
+  validUntil DateTime?
+  timeFrom   String?
+  timeTo     String?
+  weekdays   Json?
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("access_rules")
+}
+
+model AccessEvent {
+  id        Int             @id @default(autoincrement())
+  rfidKeyId Int?
+  rfidKey   RfidKey?        @relation(fields: [rfidKeyId], references: [id])
+
+  type      AccessEventType
+  zone      String
+  deviceId  String?
+
+  granted   Boolean
+  reason    String?
+
+  timestamp DateTime        @default(now())
+
+  @@index([rfidKeyId])
+  @@index([timestamp])
+  @@map("access_events")
+}
+
+// ─── CRM ─────────────────────────────────────────────────────────────────────
+
+model Pipeline {
+  id          Int             @id @default(autoincrement())
+  name        String
+  description String?
+  isDefault   Boolean         @default(false)
+  sortOrder   Int             @default(0)
+  isActive    Boolean         @default(true)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  stages Pipeline_Stage[]
+  deals  Deal[]
+
+  @@map("pipelines")
+}
+
+model Pipeline_Stage {
+  id         Int      @id @default(autoincrement())
+  pipelineId Int
+  pipeline   Pipeline @relation(fields: [pipelineId], references: [id], onDelete: Cascade)
+
+  name      String
+  color     String   @default("#6366f1")
+  sortOrder Int      @default(0)
+  isWon     Boolean  @default(false)
+  isLost    Boolean  @default(false)
+
+  deals Deal[]
+
+  @@index([pipelineId])
+  @@map("pipeline_stages")
+}
+
+model Deal {
+  id         Int        @id @default(autoincrement())
+  pipelineId Int
+  pipeline   Pipeline   @relation(fields: [pipelineId], references: [id])
+  stageId    Int
+  stage      Pipeline_Stage @relation(fields: [stageId], references: [id])
+
+  clientId Int?
+  client   Client? @relation(fields: [clientId], references: [id])
+
+  title       String
+  description String?
+  amount      Decimal?   @db.Decimal(10, 2)
+
+  status DealStatus @default(OPEN)
+
+  assignedToId Int?
+  assignedTo   Staff? @relation("DealAssignee", fields: [assignedToId], references: [id])
+  createdById  Int?
+  createdBy    Staff? @relation("DealCreator", fields: [createdById], references: [id])
+
+  dueDate  DateTime?
+  closedAt DateTime?
+
+  tags  Json?
+  extra Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  comments   DealComment[]
+  tasks      DealTask[]
+  activities DealActivity[]
+
+  @@index([pipelineId, stageId])
+  @@index([clientId])
+  @@index([assignedToId])
+  @@map("deals")
+}
+
+model DealComment {
+  id      Int    @id @default(autoincrement())
+  dealId  Int
+  deal    Deal   @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  staffId Int
+  staff   Staff  @relation(fields: [staffId], references: [id])
+  text    String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([dealId])
+  @@map("deal_comments")
+}
+
+model DealTask {
+  id          Int       @id @default(autoincrement())
+  dealId      Int
+  deal        Deal      @relation(fields: [dealId], references: [id], onDelete: Cascade)
+
+  title       String
+  description String?
+  dueDate     DateTime?
+  completedAt DateTime?
+
+  assigneeId  Int?
+  assignee    Staff?    @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  createdById Int?
+  createdBy   Staff?    @relation("TaskCreator", fields: [createdById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([dealId])
+  @@map("deal_tasks")
+}
+
+model DealActivity {
+  id      Int    @id @default(autoincrement())
+  dealId  Int
+  deal    Deal   @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  staffId Int?
+  staff   Staff? @relation(fields: [staffId], references: [id])
+
+  type String
+  data Json
+
+  createdAt DateTime @default(now())
+
+  @@index([dealId])
+  @@map("deal_activities")
+}
+
+// ─── Loyalty ─────────────────────────────────────────────────────────────────
+
+model LoyaltyProgram {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  pointsName  String   @default("баллы")
+  earnRate    Decimal  @default(1) @db.Decimal(5, 2)
+  spendRate   Decimal  @default(1) @db.Decimal(5, 2)
+  levels      Json?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("loyalty_programs")
+}
+
+model ClientLoyalty {
+  id           Int      @id @default(autoincrement())
+  clientId     Int      @unique
+  client       Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  programId    Int?
+  points       Int      @default(0)
+  level        String   @default("base")
+  totalEarned  Int      @default(0)
+  totalSpent   Int      @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("client_loyalty")
+}
+
+model LoyaltyTransaction {
+  id       Int                    @id @default(autoincrement())
+  clientId Int
+  client   Client                 @relation(fields: [clientId], references: [id])
+
+  type          LoyaltyTransactionType
+  points        Int
+  balance       Int
+  description   String?
+  referenceId   Int?
+  referenceType String?
+
+  createdAt DateTime @default(now())
+
+  @@index([clientId])
+  @@map("loyalty_transactions")
+}
+
+// ─── Schedule ────────────────────────────────────────────────────────────────
+
+model Trainer {
+  id         Int      @id @default(autoincrement())
+  staffId    Int?     @unique
+  firstName  String
+  lastName   String
+  photoUrl   String?
+  bio        String?
+  specialties Json?
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  classes Class[]
+
+  @@map("trainers")
+}
+
+model ClassType {
+  id          Int      @id @default(autoincrement())
+  name        String
+  color       String   @default("#6366f1")
+  description String?
+  duration    Int      @default(60)
+  isActive    Boolean  @default(true)
+
+  classes Class[]
+
+  @@map("class_types")
+}
+
+model Class {
+  id          Int       @id @default(autoincrement())
+  classTypeId Int
+  classType   ClassType @relation(fields: [classTypeId], references: [id])
+
+  trainerId Int?
+  trainer   Trainer? @relation(fields: [trainerId], references: [id])
+
+  title       String
+  description String?
+  room        String?
+  maxCapacity Int
+
+  startTime DateTime
+  endTime   DateTime
+
+  isRecurring Boolean @default(false)
+  recurRule   String?
+  parentId    Int?
+
+  status    String   @default("scheduled")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  registrations ClassRegistration[]
+
+  @@index([startTime])
+  @@map("classes")
+}
+
+model ClassRegistration {
+  id       Int    @id @default(autoincrement())
+  classId  Int
+  class    Class  @relation(fields: [classId], references: [id], onDelete: Cascade)
+  clientId Int
+  client   Client @relation(fields: [clientId], references: [id])
+
+  status       String   @default("registered")
+  registeredAt DateTime @default(now())
+  cancelledAt  DateTime?
+
+  @@unique([classId, clientId])
+  @@index([classId])
+  @@index([clientId])
+  @@map("class_registrations")
+}
+
+// ─── Finance ─────────────────────────────────────────────────────────────────
+
+model Payment {
+  id       Int     @id @default(autoincrement())
+  clientId Int?
+  client   Client? @relation(fields: [clientId], references: [id])
+
+  amount        Decimal       @db.Decimal(10, 2)
+  method        PaymentMethod
+  status        PaymentStatus @default(COMPLETED)
+  description   String?
+  referenceId   String?
+  processedById Int?
+
+  paidAt    DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  membership ClientMembership?
+
+  @@index([clientId])
+  @@index([paidAt])
+  @@map("payments")
+}
+
+model CashOperation {
+  id          Int      @id @default(autoincrement())
+  type        String
+  category    String
+  amount      Decimal  @db.Decimal(10, 2)
+  description String?
+  staffId     Int?
+  date        DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([date])
+  @@map("cash_operations")
+}
+
+model Invoice {
+  id       Int     @id @default(autoincrement())
+  clientId Int?
+
+  number  String @unique
+  amount  Decimal @db.Decimal(10, 2)
+  status  String  @default("draft")
+
+  dueDate DateTime?
+  paidAt  DateTime?
+
+  items Json
+  notes String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([clientId])
+  @@map("invoices")
+}
+
+// ─── Phone Calls ─────────────────────────────────────────────────────────────
+
+model PhoneCall {
+  id         Int    @id @default(autoincrement())
+  externalId String? @unique
+  clientId   Int?
+  client     Client? @relation(fields: [clientId], references: [id])
+  staffId    Int?
+  staff      Staff?  @relation(fields: [staffId], references: [id])
+
+  direction  CallDirection
+  fromNumber String
+  toNumber   String
+
+  duration     Int      @default(0)
+  recordingUrl String?
+  transcription String?
+  summary      String?
+
+  startedAt DateTime
+  endedAt   DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([clientId])
+  @@index([startedAt])
+  @@map("phone_calls")
+}

@@ -1,0 +1,37 @@
+# SportMax ERP — Caddy reverse proxy config
+# Replace sportmax.yourdomain.com with your actual domain
+
+sportmax.yourdomain.com {
+  # Web frontend
+  handle /* {
+    reverse_proxy web:3000
+  }
+
+  # API
+  handle /api/* {
+    reverse_proxy api:3001
+  }
+
+  # Swagger docs
+  handle /docs* {
+    reverse_proxy api:3001
+  }
+
+  encode gzip
+  log {
+    output file /data/logs/sportmax.log
+  }
+}
+
+# Local development — plain HTTP
+:80 {
+  handle /api/* {
+    reverse_proxy api:3001
+  }
+  handle /docs* {
+    reverse_proxy api:3001
+  }
+  handle /* {
+    reverse_proxy web:3000
+  }
+}

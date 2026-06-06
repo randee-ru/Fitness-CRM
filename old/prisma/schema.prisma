@@ -1,0 +1,230 @@
+// Для перехода на PostgreSQL достаточно заменить:
+//   provider = "sqlite"  →  provider = "postgresql"
+//   url = "file:./dev.db" → url = env("DATABASE_URL")
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+// ─── Auth ────────────────────────────────────────────────────────────────────
+
+model Account {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  password  String   // bcrypt hash
+  userId    Int      @unique
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ─── Users (клиенты + сотрудники) ───────────────────────────────────────────
+
+model User {
+  id                 Int       @id @default(autoincrement())
+  role               String    @default("клиент")   // клиент | менеджер | админ
+
+  firstName          String?
+  middleName         String?
+  lastName           String?
+  username           String?
+
+  email              String?
+  phone              String?
+  phoneAll           String?   // JSON array дополнительных телефонов
+  telegram           String?
+  telegramId         String?
+  instagram          String?
+
+  birthDate          DateTime?
+  gender             String?
+  address            String?
+
+  heightCm           Float?
+  weightKg           Float?
+
+  balance            Float?    @default(0)
+  fitnessId          String?
+  membershipId       String?
+
+  salesChannel       String?
+  referralCode       String?
+  tags               String?   // JSON array
+  notes              String?
+  interests          String?
+  jobTitle           String?
+  children           String?
+  locale             String?
+
+  passport           String?   // JSON
+  automobile         String?   // JSON
+  card               String?   // JSON { number, bracelet }
+  contractUrl        String?
+
+  extra              String?   // JSON запасное поле
+  isActive           Boolean   @default(true)
+  registrationDate   DateTime  @default(now())
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  // Relations
+  account            Account?
+  clientMemberships  ClientMembership[]
+  visits             ClientVisit[]
+  comments           Comment[]
+  phoneCalls         PhoneCall[]
+  soldMemberships    ClientMembership[] @relation("Seller")
+  managedClients     User[]             @relation("Manager")
+  personalManager    User?              @relation("Manager", fields: [personalManagerId], references: [id])
+  personalManagerId  Int?
+
+  @@index([phone])
+  @@index([role])
+  @@index([isActive])
+}
+
+// ─── Абонементы ──────────────────────────────────────────────────────────────
+
+model MembershipType {
+  id                  Int       @id @default(autoincrement())
+  name                String
+  code                String    @unique
+  description         String?
+  requiresVisitCount  Boolean   @default(false)
+  requiresDaysValid   Boolean   @default(true)
+  isSystem            Boolean   @default(false)
+  isActive            Boolean   @default(true)
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  memberships         Membership[]
+}
+
+model Membership {
+  id               Int            @id @default(autoincrement())
+  type             String         // daily | visits | unlimited
+  membershipTypeId Int?
+  membershipType   MembershipType? @relation(fields: [membershipTypeId], references: [id])
+
+  name             String
+  price            Float
+  description      String?
+  features         String?        // JSON array
+  visitCount       Int?
+  daysValid        Int?
+  validUntilTime   String?        // HH:MM — время окончания для daily-абонементов
+  isPromotional    Boolean        @default(false)
+  isActive         Boolean        @default(true)
+  extra            String?        // JSON: fitnessTicketId и др.
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  clientMemberships ClientMembership[]
+}
+
+model ClientMembership {
+  id                     Int       @id @default(autoincrement())
+  clientId               Int
+  client                 User      @relation(fields: [clientId], references: [id])
+  membershipId           Int
+  membership             Membership @relation(fields: [membershipId], references: [id])
+
+  saleDate               DateTime  @default(now())
+  activationDate         DateTime?
+  expirationDate         DateTime?
+  originalExpirationDate DateTime?
+
+  cards                  String?   // JSON array номеров карт
+  contractDetails        String?   // JSON
+  sellerId               Int?
+  seller                 User?     @relation("Seller", fields: [sellerId], references: [id])
+
+  remainingVisits        Int?
+  status                 String    @default("active") // active | expired | frozen | cancelled
+
+  frozenAt               DateTime?
+  unfrozenAt             DateTime?
+  freezeReason           String?
+  freezeDays             Int       @default(0)
+  extra                  String?   // JSON: fitnessTicketId и др.
+
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+
+  @@index([clientId])
+  @@index([status])
+}
+
+// ─── Посещения (ресепшен) ────────────────────────────────────────────────────
+
+model ClientVisit {
+  id                  Int       @id @default(autoincrement())
+  clientId            Int
+  client              User      @relation(fields: [clientId], references: [id])
+
+  checkInTime         DateTime  @default(now())
+  checkOutTime        DateTime?
+
+  membershipId        String?
+  membershipType      String?
+  notes               String?
+
+  notifiedAt          DateTime?
+  complaintAt         DateTime?
+  complaintReason     String?
+  complaintDescription String?
+  overstayMinutes     Int?
+
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@index([clientId])
+  @@index([checkOutTime])
+}
+
+// ─── Комментарии ─────────────────────────────────────────────────────────────
+
+model Comment {
+  id        String   @id @default(cuid())
+  clientId  Int
+  client    User     @relation(fields: [clientId], references: [id])
+  managerId Int?
+  text      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([clientId])
+}
+
+// ─── Звонки Mango Office ─────────────────────────────────────────────────────
+
+model PhoneCall {
+  id                   Int       @id @default(autoincrement())
+  recordingId          String    @unique
+  clientId             Int?
+  client               User?     @relation(fields: [clientId], references: [id])
+
+  phoneNumber          String
+  fromNumber           String?
+  toNumber             String?
+  direction            String    // in | out
+
+  startTime            DateTime
+  finishTime           DateTime
+  duration             Int       @default(0)
+
+  transcriptionText    String?
+  transcriptionCached  Boolean   @default(false)
+  callReport           String?
+
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  @@index([clientId])
+  @@index([phoneNumber])
+}

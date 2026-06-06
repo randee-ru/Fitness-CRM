@@ -1,0 +1,79 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 15 17 23;
+    --foreground: 255 255 255;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  html,
+  body {
+    @apply bg-ink text-white antialiased;
+    font-family: system-ui, -apple-system, sans-serif;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply rounded-full bg-white/20;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-white/30;
+  }
+}
+
+@layer components {
+  .glass {
+    @apply rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm;
+  }
+
+  .glass-strong {
+    @apply rounded-2xl border border-white/15 bg-white/8 backdrop-blur;
+  }
+
+  .form-input {
+    @apply w-full rounded-lg border border-white/20 bg-white/10 px-4 py-2 text-white
+      placeholder-white/40 transition
+      focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-400/20
+      disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2
+      text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-primary {
+    @apply btn bg-indigo-500 text-white hover:bg-indigo-600 active:bg-indigo-700;
+  }
+
+  .btn-secondary {
+    @apply btn border border-white/20 bg-white/10 text-white/80
+      hover:bg-white/20 hover:text-white;
+  }
+
+  .btn-danger {
+    @apply btn bg-rose-500/20 text-rose-300 hover:bg-rose-500/30 border border-rose-500/20;
+  }
+
+  .badge {
+    @apply inline-flex items-center rounded-full px-3 py-0.5 text-xs font-medium;
+  }
+
+  .badge-success { @apply badge bg-emerald-500/15 text-emerald-300; }
+  .badge-warning { @apply badge bg-amber-500/15 text-amber-300; }
+  .badge-danger  { @apply badge bg-rose-500/15 text-rose-300; }
+  .badge-info    { @apply badge bg-sky-500/15 text-sky-300; }
+  .badge-default { @apply badge bg-white/10 text-white/70; }
+}
