@@ -41,7 +41,10 @@
   }
 
   .glass-hover {
-    @apply glass hover:bg-white/8 transition-colors;
+    @apply glass transition-colors;
+  }
+  .glass-hover:hover {
+    background-color: rgba(255,255,255,0.08);
   }
 
   .card-stat {
@@ -52,11 +55,11 @@
     @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium;
   }
 
-  .badge-success { @apply bg-emerald-500/15 text-emerald-400 border border-emerald-500/20; }
-  .badge-warning { @apply bg-amber-500/15 text-amber-400 border border-amber-500/20; }
-  .badge-danger  { @apply bg-red-500/15 text-red-400 border border-red-500/20; }
-  .badge-info    { @apply bg-blue-500/15 text-blue-400 border border-blue-500/20; }
-  .badge-purple  { @apply bg-purple-500/15 text-purple-400 border border-purple-500/20; }
+  .badge-success { background-color: rgb(16 185 129 / 0.15); @apply text-emerald-400 border border-emerald-500/20; }
+  .badge-warning { background-color: rgb(245 158 11 / 0.15); @apply text-amber-400 border border-amber-500/20; }
+  .badge-danger  { background-color: rgb(239 68 68 / 0.15);  @apply text-red-400 border border-red-500/20; }
+  .badge-info    { background-color: rgb(59 130 246 / 0.15); @apply text-blue-400 border border-blue-500/20; }
+  .badge-purple  { background-color: rgb(168 85 247 / 0.15); @apply text-purple-400 border border-purple-500/20; }
   .badge-default { @apply bg-white/10 text-white/60 border border-white/10; }
 
   .btn-primary {
@@ -66,8 +69,9 @@
 
   .btn-ghost {
     @apply inline-flex items-center gap-2 px-3 py-2 rounded-lg text-white/60 hover:text-white
-      hover:bg-white/8 text-sm font-medium transition-all duration-150;
+      text-sm font-medium transition-all duration-150;
   }
+  .btn-ghost:hover { background-color: rgba(255,255,255,0.08); }
 
   .input {
     @apply w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white
@@ -84,6 +88,7 @@
   }
 
   .table-row {
-    @apply flex items-center px-4 py-3 border-b border-white/5 hover:bg-white/3 transition-colors cursor-default;
+    @apply flex items-center px-4 py-3 border-b border-white/5 transition-colors cursor-default;
   }
+  .table-row:hover { background-color: rgba(255,255,255,0.03); }
 }
