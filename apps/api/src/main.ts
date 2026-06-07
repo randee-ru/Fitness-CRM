@@ -29,13 +29,7 @@ async function bootstrap() {
   )
   app.use(compression())
 
-  app.enableCors({
-    origin: [
-      process.env.WEB_URL || 'http://localhost:3000',
-      'http://localhost:7777', // для Swagger UI "Try it out"
-    ],
-    credentials: true,
-  })
+  app.enableCors({ origin: true, credentials: true })
 
   app.setGlobalPrefix('api')
 
