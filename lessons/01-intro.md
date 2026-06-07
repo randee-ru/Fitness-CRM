@@ -138,7 +138,7 @@ sportmax-erp/
 1. Установите все инструменты из списка
 2. Запустите проект по инструкции выше
 3. Войдите в систему: `admin@sportmax.ru` / `admin123`
-4. Откройте http://localhost:3001/docs — посмотрите Swagger (документация API)
+4. Откройте http://localhost:7777/docs — посмотрите Swagger (документация API)
 5. Попробуйте выполнить запрос прямо из Swagger — нажмите "Try it out" у `POST /auth/login`
 
 ---

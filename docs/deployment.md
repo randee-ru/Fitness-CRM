@@ -14,7 +14,7 @@ docker compose up -d
 Система поднимет:
 - PostgreSQL (внутри Docker)
 - Redis (внутри Docker)
-- NestJS API на :3001
+- NestJS API на :7777
 - Next.js Web на :3000
 - Caddy (HTTPS reverse proxy) на :80 и :443
 
@@ -61,10 +61,10 @@ SENTRY_DSN=https://key@sentry.io/project
 ```
 sportmax.yourdomain.com {
     handle /api/* {
-        reverse_proxy api:3001
+        reverse_proxy api:7777
     }
     handle /docs* {
-        reverse_proxy api:3001
+        reverse_proxy api:7777
     }
     handle /* {
         reverse_proxy web:3000

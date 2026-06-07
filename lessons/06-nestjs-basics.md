@@ -272,7 +272,7 @@ HTTP 201 Created + JSON ответ
 
 1. Откройте `apps/api/src/modules/crm/crm.controller.ts` — найдите все HTTP-методы
 2. Откройте `apps/api/src/modules/crm/crm.service.ts` — найдите метод `moveDeal` и разберите что он делает
-3. Откройте Swagger: http://localhost:3001/docs — попробуйте выполнить `GET /clients`
+3. Откройте Swagger: http://localhost:7777/docs — попробуйте выполнить `GET /clients`
 4. **Создайте новый эндпоинт:** добавьте в `ClientsController` метод `@Get('active')` который возвращает только активных клиентов (подсказка: в `ClientsService.findAll` передайте `{ isActive: true }`)
 
 ---

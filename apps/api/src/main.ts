@@ -39,10 +39,10 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config)
   SwaggerModule.setup('docs', app, document)
 
-  const port = process.env.API_PORT || 3001
+  const port = process.env.API_PORT || 7777
   await app.listen(port)
-  console.log(`SportMax API запущен на http://localhost:${port}`)
-  console.log(`Swagger docs: http://localhost:${port}/docs`)
+  console.log(`\n🏋️  SportMax API запущен на http://localhost:${port}`)
+  console.log(`📖 Swagger docs: http://localhost:${port}/docs\n`)
 }
 
 bootstrap()

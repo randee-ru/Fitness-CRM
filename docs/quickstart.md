@@ -16,8 +16,8 @@ docker compose up -d
 
 После этого откройте:
 - **Веб-интерфейс:** http://localhost:80
-- **API:** http://localhost:3001
-- **Swagger:** http://localhost:3001/docs
+- **API:** http://localhost:7777
+- **Swagger:** http://localhost:7777/docs
 
 ---
 
@@ -94,7 +94,7 @@ cd apps/web && npm run dev
 ### Шаг 6 — Открыть в браузере
 
 - **Веб:** http://localhost:3000
-- **API Swagger:** http://localhost:3001/docs
+- **API Swagger:** http://localhost:7777/docs
 
 ---
 

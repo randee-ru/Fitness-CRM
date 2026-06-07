@@ -9,12 +9,12 @@ sportmax.yourdomain.com {
 
   # API
   handle /api/* {
-    reverse_proxy api:3001
+    reverse_proxy api:7777
   }
 
   # Swagger docs
   handle /docs* {
-    reverse_proxy api:3001
+    reverse_proxy api:7777
   }
 
   encode gzip
@@ -26,10 +26,10 @@ sportmax.yourdomain.com {
 # Local development — plain HTTP
 :80 {
   handle /api/* {
-    reverse_proxy api:3001
+    reverse_proxy api:7777
   }
   handle /docs* {
-    reverse_proxy api:3001
+    reverse_proxy api:7777
   }
   handle /* {
     reverse_proxy web:3000

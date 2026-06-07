@@ -304,7 +304,7 @@ await prisma.staff.create({
 
 ## Задание
 
-1. Откройте Swagger: http://localhost:3001/docs
+1. Откройте Swagger: http://localhost:7777/docs
 2. Нажмите "Authorize" → введите email/пароль через `POST /auth/login`
 3. Скопируйте `access_token` из ответа
 4. Вставьте в поле "Authorize" (формат: `Bearer eyJ...`)

@@ -202,7 +202,7 @@ class ApiClient {
   }
 }
 
-export const api = new ApiClient(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001')
+export const api = new ApiClient(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7777')
 ```
 
 Использование:

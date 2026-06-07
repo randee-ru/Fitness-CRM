@@ -1,7 +1,7 @@
 # REST API — SportMax ERP
 
-> Базовый URL: `http://localhost:3001/api`
-> Интерактивная документация: `http://localhost:3001/docs` (Swagger UI)
+> Базовый URL: `http://localhost:7777/api`
+> Интерактивная документация: `http://localhost:7777/docs` (Swagger UI)
 
 ---
 
