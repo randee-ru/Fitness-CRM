@@ -51,10 +51,7 @@ async function bootstrap() {
       '3. Нажмите кнопку **Authorize** вверху и вставьте токен'
     )
     .setVersion('1.0')
-    .addBearerAuth(
-      { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
-      'JWT'
-    )
+    .addBearerAuth()
     .build()
 
   const document = SwaggerModule.createDocument(app, config)
