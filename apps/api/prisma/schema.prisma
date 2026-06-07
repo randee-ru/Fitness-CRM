@@ -94,7 +94,6 @@ model Staff {
   soldMemberships  ClientMembership[] @relation("Seller")
   checkIns         ClientVisit[]      @relation("CheckInBy")
   phoneCalls       PhoneCall[]
-  trainedClasses   Class[]
 
   @@index([email])
   @@index([role])

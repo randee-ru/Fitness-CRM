@@ -1,9 +1,9 @@
 import { NestFactory } from '@nestjs/core'
-import { ValidationPipe, VersioningType } from '@nestjs/common'
+import { ValidationPipe } from '@nestjs/common'
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger'
 import { Logger } from 'nestjs-pino'
 import helmet from 'helmet'
-import compression from 'compression'
+import * as compression from 'compression'
 import { AppModule } from './app.module'
 
 async function bootstrap() {
@@ -20,8 +20,6 @@ async function bootstrap() {
   })
 
   app.setGlobalPrefix('api')
-
-  app.enableVersioning({ type: VersioningType.URI, defaultVersion: '1' })
 
   app.useGlobalPipes(
     new ValidationPipe({
